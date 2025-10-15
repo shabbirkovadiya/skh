@@ -1,25 +1,13 @@
 # bot.py
-# Simple Telegram bot — Mobile Leak Checker (made by SK)
-# Usage:
-#   /start
-#   /check <10-digit-number>  -> bot calls upstream API and returns raw JSON
-#
-# Env vars required:
-#   TELEGRAM_TOKEN
-#   REMOTE_API_KEY
-# Optional:
-#   REMOTE_API_BASE (default https://osintt.onrender.com/index.php)
-# Run: python bot.py
-
 import os
 import json
 import logging
-from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler, filters
 import requests
+from telegram import Update
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 
 # --- config ---
-TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "")
+TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
 REMOTE_API_KEY = os.environ.get("REMOTE_API_KEY", "TheDarkAgain")
 REMOTE_API_BASE = os.environ.get("REMOTE_API_BASE", "https://osintt.onrender.com/index.php")
 
@@ -35,7 +23,7 @@ def validate_indian_number(n: str):
 
 async def start_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "Bot started — made by Shabbir Kovadiya  \ninsta id: sk.jsx\n"
+        "Bot started — made by SK\n"
         "Send /check <10-digit-number> or just send a 10-digit number.\n"
         "Only check numbers you own or have permission for."
     )
@@ -60,13 +48,11 @@ async def check_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         try:
             payload = r.json()
             pretty = json.dumps(payload, indent=2, ensure_ascii=False)
-            # If too long, send as file
             if len(pretty) > 4000:
                 await update.message.reply_document(document=bytes(pretty, "utf-8"), filename=f"{clean}.json")
             else:
                 await update.message.reply_text(f"<pre>{pretty}</pre>", parse_mode="HTML")
         except Exception:
-            # If response is not JSON, send raw text
             await update.message.reply_text(r.text[:4000])
     except Exception as e:
         await update.message.reply_text(f"API request failed: {e}")
